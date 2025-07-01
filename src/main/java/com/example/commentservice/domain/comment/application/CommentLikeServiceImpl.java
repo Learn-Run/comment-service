@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 
 @Service
 @Transactional(readOnly = true)
@@ -24,14 +25,18 @@ public class CommentLikeServiceImpl implements CommentLikeService {
     private final CommentRepository commentRepository;
 
 
-    @Transactional
     @Override
     public void likeComment(CommentLikeReqDto commentLikeReqDto) {
-        // 삭제된 댓글인지 확인
+        // 삭제된 댓글인지 확인 (트랜잭션 외부에서 검증)
         if (!commentRepository.findByCommentUuidAndDeletedStatusFalse(commentLikeReqDto.getCommentUuid()).isPresent()) {
             throw new BaseException(BaseResponseStatus.NOT_FOUND_COMMENT);
         }
         
+        likeCommentInternal(commentLikeReqDto);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void likeCommentInternal(CommentLikeReqDto commentLikeReqDto) {
         if (commentLikeRepository.existsByCommentUuidAndMemberUuid(
                 commentLikeReqDto.getCommentUuid(), commentLikeReqDto.getMemberUuid())) {
             log.warn(
@@ -43,7 +48,7 @@ public class CommentLikeServiceImpl implements CommentLikeService {
         commentLikeRepository.save(commentLikeReqDto.toEntity());
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     @Override
     public void unlikeComment(CommentLikeReqDto commentLikeReqDto) {
         CommentLike commentLike = commentLikeRepository

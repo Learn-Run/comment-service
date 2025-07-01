@@ -23,6 +23,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
 
@@ -35,18 +38,30 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final PostServiceClient postServiceClient;
     private final KafkaProducer kafkaProducer;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     private static final int DEFAULT_PAGE_SIZE = 10;
 
-    @Transactional
     @Override
     public void createComment(CommentCreateReqDto commentCreateReqDto) {
+        // 외부 API 호출을 트랜잭션 외부에서 수행
         validatePostExists(commentCreateReqDto);
-        Comment comment = commentRepository.save(commentCreateReqDto.toEntity());
-        kafkaProducer.sendCommentCreatedEvent(CommentCreatedEvent.from(comment));
+        createCommentInternal(commentCreateReqDto);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void createCommentInternal(CommentCreateReqDto commentCreateReqDto) {
+        Comment comment = commentRepository.save(commentCreateReqDto.toEntity());
+        // 트랜잭션 커밋 후 이벤트 발행
+        applicationEventPublisher.publishEvent(CommentCreatedEvent.from(comment));
+    }
+
+    @TransactionalEventListener
+    public void handleCommentCreated(CommentCreatedEvent event) {
+        kafkaProducer.sendCommentCreatedEvent(event);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     @Override
     public void updateComment(CommentUpdateReqDto commentUpdateReqDto) {
         Comment comment = commentRepository.findByCommentUuidAndDeletedStatusFalse(commentUpdateReqDto.getCommentUuid())
@@ -58,7 +73,7 @@ public class CommentServiceImpl implements CommentService {
         commentRepository.save(comment);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     @Override
     public void deleteComment(CommentDeleteReqDto commentDeleteReqDto) {
         Comment comment = commentRepository.findByCommentUuidAndDeletedStatusFalse(commentDeleteReqDto.getCommentUuid())
@@ -66,7 +81,13 @@ public class CommentServiceImpl implements CommentService {
         validateCommentOwner(comment, commentDeleteReqDto.getMemberUuid());
         comment.softDelete();
         commentRepository.save(comment);
-        kafkaProducer.sendCommentDeletedEvent(CommentDeletedEvent.from(comment));
+        // 트랜잭션 커밋 후 이벤트 발행
+        applicationEventPublisher.publishEvent(CommentDeletedEvent.from(comment));
+    }
+
+    @TransactionalEventListener
+    public void handleCommentDeleted(CommentDeletedEvent event) {
+        kafkaProducer.sendCommentDeletedEvent(event);
     }
 
     @Override

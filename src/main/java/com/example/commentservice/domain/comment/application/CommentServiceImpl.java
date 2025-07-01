@@ -24,8 +24,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Async;
 
 import java.util.List;
 
@@ -56,10 +56,7 @@ public class CommentServiceImpl implements CommentService {
         applicationEventPublisher.publishEvent(CommentCreatedEvent.from(comment));
     }
 
-    @TransactionalEventListener
-    public void handleCommentCreated(CommentCreatedEvent event) {
-        kafkaProducer.sendCommentCreatedEvent(event);
-    }
+
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     @Override
@@ -85,10 +82,7 @@ public class CommentServiceImpl implements CommentService {
         applicationEventPublisher.publishEvent(CommentDeletedEvent.from(comment));
     }
 
-    @TransactionalEventListener
-    public void handleCommentDeleted(CommentDeletedEvent event) {
-        kafkaProducer.sendCommentDeletedEvent(event);
-    }
+
 
     @Override
     public CommentResDto getCommentByCommentUuid(String commentUuid) {
@@ -121,9 +115,16 @@ public class CommentServiceImpl implements CommentService {
         }
     }
 
-    private void validatePostExists(CommentCreateReqDto commentCreateReqDto) {
-        BaseResponseEntity<ExistsPostResDto> response = postServiceClient.existsPost(commentCreateReqDto.getPostUuid());
-        if (!response.result().isExistsPost()) {
+    @Async("externalApiExecutor")
+    public void validatePostExists(CommentCreateReqDto commentCreateReqDto) {
+        try {
+            BaseResponseEntity<ExistsPostResDto> response = postServiceClient.existsPost(commentCreateReqDto.getPostUuid());
+            if (!response.result().isExistsPost()) {
+                throw new BaseException(BaseResponseStatus.POST_NOT_FOUND);
+            }
+        } catch (Exception e) {
+            log.error("게시글 존재 여부 확인 실패: postUuid={}, error={}", 
+                     commentCreateReqDto.getPostUuid(), e.getMessage(), e);
             throw new BaseException(BaseResponseStatus.POST_NOT_FOUND);
         }
     }

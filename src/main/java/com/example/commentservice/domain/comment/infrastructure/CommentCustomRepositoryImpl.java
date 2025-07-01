@@ -20,7 +20,9 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
 
     @Override
     public Page<Comment> findCommentByPostUuid(String postUuid, Pageable pageable) {
-        Query baseQuery = new Query(Criteria.where("postUuid").is(postUuid));
+        // 삭제되지 않은 댓글만 조회하도록 필터링 추가
+        Query baseQuery = new Query(Criteria.where("postUuid").is(postUuid)
+                .and("deletedStatus").is(false));
 
         long total = mongoTemplate.count(baseQuery, Comment.class);
         List<Comment> comments = mongoTemplate.find(baseQuery.with(pageable), Comment.class);

@@ -8,6 +8,7 @@ import com.example.commentservice.domain.comment.dto.out.CommentLikeCheckResDto;
 import com.example.commentservice.domain.comment.dto.out.CommentLikeCountResDto;
 import com.example.commentservice.domain.comment.entity.CommentLike;
 import com.example.commentservice.domain.comment.infrastructure.CommentLikeRepository;
+import com.example.commentservice.domain.comment.infrastructure.CommentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,11 +21,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommentLikeServiceImpl implements CommentLikeService {
 
     private final CommentLikeRepository commentLikeRepository;
+    private final CommentRepository commentRepository;
 
 
     @Transactional
     @Override
     public void likeComment(CommentLikeReqDto commentLikeReqDto) {
+        // 삭제된 댓글인지 확인
+        if (!commentRepository.findByCommentUuidAndDeletedStatusFalse(commentLikeReqDto.getCommentUuid()).isPresent()) {
+            throw new BaseException(BaseResponseStatus.NOT_FOUND_COMMENT);
+        }
+        
         if (commentLikeRepository.existsByCommentUuidAndMemberUuid(
                 commentLikeReqDto.getCommentUuid(), commentLikeReqDto.getMemberUuid())) {
             log.warn(

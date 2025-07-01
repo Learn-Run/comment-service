@@ -10,5 +10,7 @@ import java.util.Optional;
 @Repository
 public interface CommentRepository extends MongoRepository<Comment, String>,CommentCustomRepository {
     Optional<Comment> findByCommentUuid(String commentUuid);
-
+    
+    // 삭제되지 않은 댓글만 조회하는 메서드 추가
+    Optional<Comment> findByCommentUuidAndDeletedStatusFalse(String commentUuid);
 }

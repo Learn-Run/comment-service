@@ -22,9 +22,9 @@ public class Comment extends BaseDocument {
     private String postUuid;
     private String memberUuid;
     private String content;
-    private boolean blind_status;
-    private boolean deleted_status;
-    private LocalDateTime deleted_at;
+    private boolean blindStatus;
+    private boolean deletedStatus;
+    private LocalDateTime deletedAt;
 
 
     @Builder
@@ -33,17 +33,17 @@ public class Comment extends BaseDocument {
             String postUuid,
             String memberUuid,
             String content,
-            boolean blind_status,
-            boolean deleted_status,
-            LocalDateTime deleted_at
+            boolean blindStatus,
+            boolean deletedStatus,
+            LocalDateTime deletedAt
     ) {
         this.commentUuid = commentUuid;
         this.postUuid = postUuid;
         this.memberUuid = memberUuid;
         this.content = content;
-        this.blind_status = blind_status;
-        this.deleted_status = deleted_status;
-        this.deleted_at = deleted_at;
+        this.blindStatus = blindStatus;
+        this.deletedStatus = deletedStatus;
+        this.deletedAt = deletedAt;
     }
 
     public void updateContent(String content) {
@@ -51,7 +51,7 @@ public class Comment extends BaseDocument {
     }
 
     public void softDelete() {
-        this.deleted_status = true;
-        this.deleted_at = LocalDateTime.now();
+        this.deletedStatus = true;
+        this.deletedAt = LocalDateTime.now();
     }
 }

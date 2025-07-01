@@ -1,7 +1,5 @@
 package com.example.commentservice.domain.comment.application;
 
-import com.example.commentservice.client.post.PostServiceClient;
-import com.example.commentservice.client.post.dto.out.ExistsPostResDto;
 import com.example.commentservice.common.entity.BaseResponseEntity;
 import com.example.commentservice.common.exception.BaseException;
 import com.example.commentservice.common.kafka.event.CommentCreatedEvent;
@@ -36,7 +34,6 @@ import java.util.List;
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
-    private final PostServiceClient postServiceClient;
     private final KafkaProducer kafkaProducer;
     private final ApplicationEventPublisher applicationEventPublisher;
 
@@ -44,8 +41,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public void createComment(CommentCreateReqDto commentCreateReqDto) {
-        // 외부 API 호출을 트랜잭션 외부에서 수행
-        validatePostExists(commentCreateReqDto);
+        // Post 존재 여부 검증 제거 - MSA 원칙에 따라 서비스 독립성 보장
         createCommentInternal(commentCreateReqDto);
     }
 
@@ -115,17 +111,5 @@ public class CommentServiceImpl implements CommentService {
         }
     }
 
-    @Async("externalApiExecutor")
-    public void validatePostExists(CommentCreateReqDto commentCreateReqDto) {
-        try {
-            BaseResponseEntity<ExistsPostResDto> response = postServiceClient.existsPost(commentCreateReqDto.getPostUuid());
-            if (!response.result().isExistsPost()) {
-                throw new BaseException(BaseResponseStatus.POST_NOT_FOUND);
-            }
-        } catch (Exception e) {
-            log.error("게시글 존재 여부 확인 실패: postUuid={}, error={}", 
-                     commentCreateReqDto.getPostUuid(), e.getMessage(), e);
-            throw new BaseException(BaseResponseStatus.POST_NOT_FOUND);
-        }
-    }
+
 }

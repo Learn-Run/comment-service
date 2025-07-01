@@ -33,26 +33,8 @@ public enum BaseResponseStatus {
     INVALID_USER_ROLE(HttpStatus.BAD_REQUEST, false, 1102, "유효하지 않은 유저 권한입니다."),
 
     /**
-     * 2000 : post and comment service error
+     * 2000 : comment service error
      */
-    POST_NOT_FOUND(HttpStatus.NOT_FOUND, false, 2000, "해당 게시글을 찾을 수 없습니다."),
-    FAILED_TO_CREATE_POST(HttpStatus.INTERNAL_SERVER_ERROR, false, 2001, "게시글 작성에 실패하였습니다."),
-    FAILED_TO_UPDATE_POST(HttpStatus.INTERNAL_SERVER_ERROR, false, 2002, "게시글 수정에 실패하였습니다."),
-    FAILED_TO_DELETE_POST(HttpStatus.INTERNAL_SERVER_ERROR, false, 2003, "게시글 삭제에 실패하였습니다."),
-    POST_CONTENT_TOO_LONG(HttpStatus.BAD_REQUEST, false, 2004, "게시글 내용이 너무 깁니다."),
-    POST_TITLE_TOO_LONG(HttpStatus.BAD_REQUEST, false, 2005, "게시글 제목이 너무 깁니다."),
-    INVALID_POST_FORMAT(HttpStatus.BAD_REQUEST, false, 2007, "게시글 형식이 잘못되었습니다."),
-    POST_PERMISSION_DENIED(HttpStatus.FORBIDDEN, false, 2008, "게시글에 대한 권한이 없습니다."),
-
-    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, false, 2100, "해당 카테고리를 찾을 수 없습니다."),
-    FAILED_TO_CREATE_CATEGORY(HttpStatus.INTERNAL_SERVER_ERROR, false, 2101, "카테고리 생성에 실패하였습니다."),
-    FAILED_TO_UPDATE_CATEGORY(HttpStatus.INTERNAL_SERVER_ERROR, false, 2102, "카테고리 수정에 실패하였습니다."),
-    FAILED_TO_DELETE_CATEGORY(HttpStatus.INTERNAL_SERVER_ERROR, false, 2103, "카테고리 삭제에 실패하였습니다."),
-    CATEGORY_NAME_ALREADY_EXISTS(HttpStatus.CONFLICT, false, 2104, "이미 존재하는 카테고리 이름입니다."),
-    INVALID_CATEGORY_NAME(HttpStatus.BAD_REQUEST, false, 2105, "유효하지 않은 카테고리 이름입니다."),
-    DUPLICATE_CATEGORY_LIST(HttpStatus.BAD_REQUEST, false, 2106, "중복된 카테고리 입니다."),
-
-
     NOT_FOUND_COMMENT(HttpStatus.NOT_FOUND, false, 2500, "해당 댓글을 찾을 수 없습니다."),
     ALREADY_EXISTS_COMMENT_LIKE(HttpStatus.CONFLICT, false, 2501, "이미 댓글에 좋아요를 하였습니다.");
 

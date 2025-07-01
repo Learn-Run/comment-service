@@ -30,22 +30,5 @@ public class AsyncConfig {
         return executor;
     }
 
-    /**
-     * 외부 API 호출을 위한 전용 스레드 풀
-     * - 코어 스레드: 1개
-     * - 최대 스레드: 3개
-     * - 큐 크기: 50개
-     * - 스레드 이름: external-api-
-     */
-    @Bean(name = "externalApiExecutor")
-    public Executor externalApiExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(1);
-        executor.setMaxPoolSize(3);
-        executor.setQueueCapacity(50);
-        executor.setThreadNamePrefix("external-api-");
-        executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
-        executor.initialize();
-        return executor;
-    }
+
 } 
